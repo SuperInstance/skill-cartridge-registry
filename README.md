@@ -6,20 +6,17 @@ JSON skill cartridge marketplace — discover, rate, install cartridges for any 
 
 Part of the [Cocapn fleet](https://github.com/Lucineer/the-fleet).
 
-## Deploy
-
-Fork, add API keys as CF secrets, deploy with wrangler.
-
 ## Endpoints
 | Path | Purpose |
 |------|---------|
 | / | Landing page |
+| /api/cartridges | Browse cartridges |
+| /api/rate | Rate a cartridge |
 | /health | Liveness check |
-| /vessel.json | Fleet metadata |
+
+## Deploy
+Fork, deploy with wrangler.
 
 ---
-
 <i>Built with [Cocapn](https://github.com/Lucineer/cocapn-ai).</i>
-<i>Part of the [Lucineer fleet](https://github.com/Lucineer).</i>
-
 Superinstance & Lucineer (DiGennaro et al.)

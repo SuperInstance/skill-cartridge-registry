@@ -1,579 +1,644 @@
-const defaultCartridges = [
+import { Cartridge, CartridgeData, RatingRequest, PublishRequest, InstallRequest } from "./types";
+
+export interface Env {
+  CARTRIDGES: KVNamespace;
+}
+
+const DEFAULT_CARTRIDGES: Cartridge[] = [
   {
-    name: "code-gen",
+    id: "code-gen",
+    name: "Code Generator",
     version: "1.2.0",
-    description: "Generates code snippets and full modules based on natural language prompts.",
-    author: "DevCore",
-    rating: 4.7,
-    downloads: 12500,
-    skills: ["code generation", "syntax analysis", "debugging"],
-    rules: ["Requires code context", "Must cite sources", "No production deployment without review"],
-    category: "development"
-  },
-  {
-    name: "delegation",
-    version: "1.0.3",
-    description: "Automatically delegates tasks to appropriate sub-agents based on skill matching.",
-    author: "FlowLabs",
-    rating: 4.5,
-    downloads: 8900,
-    skills: ["task routing", "load balancing", "priority assessment"],
-    rules: ["Must maintain audit trail", "Timeout after 30 seconds", "Fallback to human if confidence < 70%"],
-    category: "coordination"
-  },
-  {
-    name: "error-recovery",
-    version: "2.1.0",
-    description: "Detects and recovers from runtime errors with automated rollback procedures.",
-    author: "ResilientAI",
-    rating: 4.9,
-    downloads: 15600,
-    skills: ["exception handling", "state restoration", "root cause analysis"],
-    rules: ["Three retry attempts max", "Preserve original input", "Log all recovery actions"],
-    category: "reliability"
-  },
-  {
-    name: "planning",
-    version: "1.5.2",
-    description: "Creates step-by-step execution plans for complex multi-stage tasks.",
-    author: "StrategyNet",
-    rating: 4.6,
-    downloads: 11200,
-    skills: ["dependency resolution", "resource estimation", "critical path analysis"],
-    rules: ["Validate prerequisites", "Include contingency branches", "Update plan after each step"],
-    category: "coordination"
-  },
-  {
-    name: "socratic-method",
-    version: "1.0.8",
-    description: "Engages users with probing questions to clarify ambiguous requests and deepen understanding.",
-    author: "DialogueSystems",
-    rating: 4.3,
-    downloads: 7400,
-    skills: ["question formulation", "assumption checking", "concept clarification"],
-    rules: ["Maximum three clarifying questions", "Respect user's time", "Document learned context"],
-    category: "communication"
-  },
-  {
-    name: "spaced-repetition",
-    version: "1.3.1",
-    description: "Implements spaced repetition algorithms for optimal knowledge retention and recall.",
-    author: "MnemoTech",
+    description: "Generate, review, and refactor code",
+    author: "Cocapn Core",
     rating: 4.8,
-    downloads: 6300,
-    skills: ["interval scheduling", "recall probability", "difficulty calibration"],
-    rules: ["Adjust intervals based on performance", "Prioritize weak areas", "Daily review limit: 50 items"],
-    category: "learning"
+    downloads: 120,
+    skills: ["code_generation", "code_review", "refactoring"],
+    rules: ["Always include tests", "Follow language conventions"],
+    compatible_with: ["all"]
   },
   {
-    name: "fishing-strategy",
-    version: "1.1.4",
-    description: "Optimizes fishing approaches based on location, season, and target species.",
-    author: "AnglerAI",
-    rating: 4.4,
-    downloads: 3200,
-    skills: ["pattern recognition", "environmental analysis", "gear recommendation"],
-    rules: ["Check local regulations", "Prioritize sustainable practices", "Weather safety first"],
-    category: "specialized"
+    id: "delegation",
+    name: "Multi-Agent Delegation",
+    version: "1.0.0",
+    description: "Multi-agent task delegation",
+    author: "Cocapn Core",
+    rating: 4.5,
+    downloads: 89,
+    skills: ["task_delegation", "coordination"],
+    rules: ["Assign based on capability", "Monitor progress"],
+    compatible_with: ["fleet-v1+"]
   },
   {
-    name: "dnd-narration",
-    version: "2.0.0",
-    description: "Generates immersive Dungeons & Dragons narratives with consistent world-building.",
-    author: "LoreForge",
+    id: "error-recovery",
+    name: "Error Recovery",
+    version: "1.1.0",
+    description: "Automatic error diagnosis and recovery",
+    author: "Cocapn Core",
+    rating: 4.7,
+    downloads: 95,
+    skills: ["error_diagnosis", "recovery_protocols"],
+    rules: ["Log all errors", "Attempt recovery before escalation"],
+    compatible_with: ["all"]
+  },
+  {
+    id: "planning",
+    name: "Task Planning",
+    version: "1.3.0",
+    description: "Multi-step task decomposition",
+    author: "Cocapn Core",
     rating: 4.9,
-    downloads: 9800,
-    skills: ["story generation", "character consistency", "plot development"],
-    rules: ["Maintain tone consistency", "Respect player agency", "Include sensory details"],
-    category: "entertainment"
+    downloads: 150,
+    skills: ["task_decomposition", "planning"],
+    rules: ["Break into subtasks", "Estimate effort"],
+    compatible_with: ["all"]
+  },
+  {
+    id: "socratic-method",
+    name: "Socratic Method",
+    version: "1.0.0",
+    description: "Teach by asking questions",
+    author: "Cocapn Core",
+    rating: 4.6,
+    downloads: 67,
+    skills: ["teaching", "questioning"],
+    rules: ["Ask open-ended questions", "Build on previous answers"],
+    compatible_with: ["education-module"]
+  },
+  {
+    id: "spaced-repetition",
+    name: "Spaced Repetition",
+    version: "1.0.0",
+    description: "Optimal learning intervals",
+    author: "Cocapn Core",
+    rating: 4.4,
+    downloads: 45,
+    skills: ["learning_optimization", "scheduling"],
+    rules: ["Calculate optimal intervals", "Adapt to performance"],
+    compatible_with: ["education-module"]
+  },
+  {
+    id: "fishing-strategy",
+    name: "Fishing Strategy AI",
+    version: "2.0.0",
+    description: "Adaptive fishing AI",
+    author: "Marine Ops",
+    rating: 4.9,
+    downloads: 200,
+    skills: ["fishing_patterns", "resource_optimization"],
+    rules: ["Respect conservation limits", "Adapt to weather"],
+    compatible_with: ["marine-vessels"]
+  },
+  {
+    id: "dnd-narration",
+    name: "D&D Narration",
+    version: "1.5.0",
+    description: "Immersive TTRPG storytelling",
+    author: "Entertainment Div",
+    rating: 5.0,
+    downloads: 180,
+    skills: ["storytelling", "character_voices", "rule_adjudication"],
+    rules: ["Maintain narrative consistency", "Engage all players"],
+    compatible_with: ["entertainment-module"]
   }
 ];
 
-const htmlContent = `<!DOCTYPE html>
+const HTML_HEADER = `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill Cartridge Registry</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a0f;
-            color: #e2e8f0;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* Header & Hero */
-        header {
-            padding: 40px 0;
-            border-bottom: 1px solid #1e293b;
-        }
-        
-        .hero {
-            text-align: center;
-            padding: 80px 0;
-            background: linear-gradient(180deg, #0a0a0f 0%, #0f172a 100%);
-        }
-        
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, #818cf8, #60a5fa);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 20px;
-        }
-        
-        .hero p {
-            font-size: 1.25rem;
-            color: #94a3b8;
-            max-width: 600px;
-            margin: 0 auto 40px;
-        }
-        
-        .cta-button {
-            display: inline-block;
-            background: #818cf8;
-            color: white;
-            padding: 12px 32px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .cta-button:hover {
-            background: transparent;
-            border-color: #818cf8;
-            color: #818cf8;
-        }
-        
-        /* Sections */
-        section {
-            padding: 80px 0;
-        }
-        
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 600;
-            margin-bottom: 40px;
-            color: #f1f5f9;
-            text-align: center;
-        }
-        
-        /* How It Works */
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
-        .step {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            border-left: 4px solid #818cf8;
-        }
-        
-        .step-number {
-            display: inline-block;
-            background: #818cf8;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 36px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        
-        /* Features */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
-        .feature {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            transition: transform 0.3s ease;
-        }
-        
-        .feature:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: #818cf8;
-        }
-        
-        /* Fleet Integration */
-        .integration {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 60px;
-            border-radius: 16px;
-            margin-top: 40px;
-            border: 1px solid #334155;
-        }
-        
-        .code-block {
-            background: #0a0a0f;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            margin: 20px 0;
-            border: 1px solid #334155;
-            overflow-x: auto;
-        }
-        
-        /* Footer */
-        footer {
-            background: #0f172a;
-            padding: 40px 0;
-            border-top: 1px solid #1e293b;
-            margin-top: 80px;
-        }
-        
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        
-        .footer-links {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .footer-links a {
-            color: #94a3b8;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-links a:hover {
-            color: #818cf8;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .integration {
-                padding: 30px;
-            }
-            
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Cartridge Registry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #11111a;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --accent: #818cf8;
+      --accent-hover: #6366f1;
+      --card-bg: #1e1e2e;
+      --border: #2d2d3d;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    header {
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .hero {
+      text-align: center;
+      padding: 4rem 0;
+    }
+    
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent) 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+    
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin: 3rem 0;
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-card h3 {
+      font-size: 2rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    
+    .section-title {
+      font-size: 2rem;
+      margin: 4rem 0 2rem;
+      color: var(--text-primary);
+    }
+    
+    .cartridges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    
+    .cartridge-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    
+    .cartridge-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+    
+    .cartridge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    
+    .cartridge-id {
+      font-family: monospace;
+      color: var(--accent);
+      font-size: 0.9rem;
+      background: rgba(129, 140, 248, 0.1);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+    
+    .cartridge-rating {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: #fbbf24;
+    }
+    
+    .cartridge-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .cartridge-description {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+    
+    .cartridge-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .skill-tag {
+      background: rgba(129, 140, 248, 0.1);
+      color: var(--accent);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    
+    .api-docs {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 4rem 0;
+      border: 1px solid var(--border);
+    }
+    
+    .endpoint {
+      background: var(--card-bg);
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      font-family: monospace;
+      border-left: 4px solid var(--accent);
+    }
+    
+    footer {
+      text-align: center;
+      padding: 3rem 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    .fleet-footer {
+      margin-top: 1rem;
+      font-family: monospace;
+      color: var(--accent);
+    }
+    
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background: var(--accent-hover);
+    }
+    
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+      
+      .cartridges-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #818cf8;">SkillCartridge</div>
-            <nav style="display: flex; gap: 30px;">
-                <a href="#how-it-works" style="color: #e2e8f0; text-decoration: none;">How It Works</a>
-                <a href="#features" style="color: #e2e8f0; text-decoration: none;">Features</a>
-                <a href="#integration" style="color: #e2e8f0; text-decoration: none;">Integration</a>
-                <a href="/api/cartridges" style="color: #818cf8; text-decoration: none;">API</a>
-            </nav>
-        </div>
-    </header>
-    
-    <section class="hero">
-        <div class="container">
-            <h1>Skill Cartridge Registry</h1>
-            <p>Discover, rate, and install specialized skill cartridges for your AI vessels. Enhance capabilities with modular, interoperable components.</p>
-            <a href="#features" class="cta-button">Explore Cartridges</a>
-        </div>
-    </section>
-    
-    <section id="how-it-works" class="container">
-        <h2 class="section-title">How It Works</h2>
-        <div class="steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3 style="margin-bottom: 15px; color: #f1f5f9;">Discover</h3>
-                <p style="color: #94a3b8;">Browse our curated marketplace of skill cartridges, each designed for specific capabilities.</p>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3 style="margin-bottom: 15px; color: #f1f5f9;">Install</h3>
-                <p style="color: #94a3b8;">Install cartridges with a single API call. They automatically integrate with your vessel's runtime.</p>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3 style="margin-bottom: 15px; color: #f1f5f9;">Enhance</h3>
-                <p style="color: #94a3b8;">Watch your vessel gain new abilities instantly. Rate and review cartridges to help others.</p>
-            </div>
-        </div>
-    </section>
-    
-    <section id="features" class="container">
-        <h2 class="section-title">Featured Cartridges</h2>
-        <div class="features-grid">
-            <div class="feature">
-                <div class="feature-icon">⚡</div>
-                <h3 style="margin-bottom: 15px; color: #f1f5f9;">Code Generation</h3>
-                <p style="color: #94a3b8;">Generate code snippets and full modules based on natural language prompts with intelligent context awareness.</p>
-                <div style="margin-top: 20px; color: #818cf8; font-weight: 500;">12.5k downloads • 4.7★</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🔄</div>
-                <h3 style="margin-bottom: 15px; color: #f1f5f9;">Error Recovery</h3>
-                <p style="color: #94a3b8;">Automated rollback and recovery procedures with root cause analysis and state restoration.</p>
-                <div style="margin-top: 20px; color: #818cf8; font-weight: 500;">15.6k downloads • 4.9★</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🎮</div>
-                <h3 style="margin-bottom: 15px; color: #f1f5f9;">D&D Narration</h3>
-                <p style="color: #94a3b8;">Immersive narrative generation for tabletop RPGs with consistent world-building and character development.</p>
-                <div style="margin-top: 20px; color: #818cf8; font-weight: 500;">9.8k downloads • 4.9★</div>
-            </div>
-        </div>
-    </section>
-    
-    <section id="integration" class="container">
-        <h2 class="section-title">Fleet Integration</h2>
-        <div class="integration">
-            <h3 style="margin-bottom: 20px; color: #f1f5f9;">Simple API Integration</h3>
-            <p style="color: #94a3b8; margin-bottom: 20px;">Integrate skill cartridges into your vessel with a single HTTP request:</p>
-            
-            <div class="code-block">
-                <code style="color: #818cf8;">POST</code> <code style="color: #e2e8f0;">/api/install</code><br>
-                <code style="color: #60a5fa;">{</code><br>
-                <code style="color: #60a5fa;">  "cartridge": "code-gen",</code><br>
-                <code style="color: #60a5fa;">  "vessel_id": "your-vessel-id"</code><br>
-                <code style="color: #60a5fa;">}</code>
-            </div>
-            
-            <p style="color: #94a3b8; margin-top: 20px;">All cartridges are self-contained JSON modules that follow the Cocapn runtime specification for seamless integration.</p>
-        </div>
-    </section>
-    
+  <div class="container">
+    <header>
+      <h2 style="color: var(--accent); font-weight: 600;">Cocapn Fleet</h2>
+    </header>`;
+
+const HTML_FOOTER = `
     <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div style="color: #94a3b8;">
-                    <div style="font-size: 1.2rem; font-weight: 600; color: #818cf8; margin-bottom: 10px;">SkillCartridge Registry</div>
-                    <div>Modular AI capabilities marketplace</div>
-                </div>
-                
-                <div class="footer-links">
-                    <a href="/api/cartridges">API Docs</a>
-                    <a href="/health">Health Status</a>
-                    <a href="/vessel.json">Fleet Metadata</a>
-                </div>
-                
-                <div style="color: #64748b; font-size: 0.9rem;">
-                    <i style="color:#888">Built with <a href="https://github.com/Lucineer/cocapn-ai" style="color:#818cf8">Cocapn</a> — the open-source agent runtime.</i>
-                </div>
-            </div>
-        </div>
+      <p>Skill Cartridge Registry &copy; ${new Date().getFullYear()} Cocapn Fleet</p>
+      <p class="fleet-footer">Interoperable. Modular. Autonomous.</p>
     </footer>
-    
-    <script>
-        // Simple client-side search functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Skill Cartridge Registry loaded');
-            
-            // Smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href');
-                    if(targetId === '#') return;
-                    
-                    const targetElement = document.querySelector(targetId);
-                    if(targetElement) {
-                        window.scrollTo({
-                            top: targetElement.offsetTop - 80,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-        });
-    </script>
+  </div>
 </body>
 </html>`;
 
+function renderCartridgeCard(cartridge: Cartridge): string {
+  const stars = '★'.repeat(Math.floor(cartridge.rating)) + '☆'.repeat(5 - Math.floor(cartridge.rating));
+  return `
+    <div class="cartridge-card">
+      <div class="cartridge-header">
+        <span class="cartridge-id">${cartridge.id}</span>
+        <span class="cartridge-rating">${stars} ${cartridge.rating.toFixed(1)}</span>
+      </div>
+      <h3 class="cartridge-name">${cartridge.name}</h3>
+      <p class="cartridge-description">${cartridge.description}</p>
+      <div class="cartridge-meta">
+        <span>v${cartridge.version}</span>
+        <span>${cartridge.downloads} downloads</span>
+      </div>
+      <div class="skills">
+        ${cartridge.skills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderLandingPage(): string {
+  const stats = `
+    <div class="stats">
+      <div class="stat-card">
+        <h3>8</h3>
+        <p>Built-in Cartridges</p>
+      </div>
+      <div class="stat-card">
+        <h3>1</h3>
+        <p>API Call to Install</p>
+      </div>
+      <div class="stat-card">
+        <h3>JSON</h3>
+        <p>Native Format</p>
+      </div>
+      <div class="stat-card">
+        <h3>Fork</h3>
+        <p>First Philosophy</p>
+      </div>
+    </div>`;
+
+  const cartridges = DEFAULT_CARTRIDGES.map(renderCartridgeCard).join('');
+
+  const apiDocs = `
+    <section class="api-docs">
+      <h2 class="section-title">API Documentation</h2>
+      <div class="endpoint">GET /api/cartridges — List all cartridges</div>
+      <div class="endpoint">GET /api/cartridges/:id — Get specific cartridge</div>
+      <div class="endpoint">POST /api/install — Install cartridge to vessel</div>
+      <div class="endpoint">POST /api/rate — Rate a cartridge (1-5 stars)</div>
+      <div class="endpoint">POST /api/publish — Publish new cartridge</div>
+      <div class="endpoint">GET /health — Service status</div>
+    </section>`;
+
+  return HTML_HEADER + `
+    <main>
+      <section class="hero">
+        <h1>Skill Cartridge Registry</h1>
+        <p>Plug-and-play capabilities for any vessel. Extend your fleet's abilities with modular JSON skill packages.</p>
+        ${stats}
+      </section>
+      
+      <section>
+        <h2 class="section-title">Featured Cartridges</h2>
+        <div class="cartridges-grid">
+          ${cartridges}
+        </div>
+      </section>
+      
+      ${apiDocs}
+    </main>
+  ` + HTML_FOOTER;
+}
+
+async function handleApiRequest(path: string, request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  
+  // GET /api/cartridges
+  if (path === '/api/cartridges' && request.method === 'GET') {
+    const allCartridges: Cartridge[] = [];
+    
+    // Get default cartridges
+    allCartridges.push(...DEFAULT_CARTRIDGES);
+    
+    // Get custom cartridges from KV
+    const customKeys = await env.CARTRIDGES.list();
+    for (const key of customKeys.keys) {
+      const cartridge = await env.CARTRIDGES.get(key.name, 'json');
+      if (cartridge) allCartridges.push(cartridge as Cartridge);
+    }
+    
+    return new Response(JSON.stringify(allCartridges), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  
+  // GET /api/cartridges/:id
+  if (path.startsWith('/api/cartridges/') && request.method === 'GET') {
+    const id = path.split('/')[3];
+    
+    // Check default cartridges
+    const defaultCartridge = DEFAULT_CARTRIDGES.find(c => c.id === id);
+    if (defaultCartridge) {
+      return new Response(JSON.stringify(defaultCartridge), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Check KV
+    const cartridge = await env.CARTRIDGES.get(id, 'json');
+    if (cartridge) {
+      return new Response(JSON.stringify(cartridge), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    return new Response(JSON.stringify({ error: 'Cartridge not found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  
+  // POST /api/install
+  if (path === '/api/install' && request.method === 'POST') {
+    try {
+      const data: InstallRequest = await request.json();
+      const cartridgeId = data.cartridge_id;
+      
+      // In a real implementation, this would add to vessel config
+      // For now, we'll just increment downloads
+      let cartridge: Cartridge | undefined = DEFAULT_CARTRIDGES.find(c => c.id === cartridgeId);
+      let isCustom = false;
+      
+      if (!cartridge) {
+        cartridge = await env.CARTRIDGES.get(cartridgeId, 'json') as Cartridge;
+        isCustom = true;
+      }
+      
+      if (!cartridge) {
+        return new Response(JSON.stringify({ error: 'Cartridge not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      cartridge.downloads += 1;
+      
+      if (isCustom) {
+        await env.CARTRIDGES.put(cartridgeId, JSON.stringify(cartridge));
+      }
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Cartridge ${cartridgeId} installed successfully`,
+        config_update: {
+          skills_added: cartridge.skills,
+          rules_added: cartridge.rules
+        }
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: 'Invalid request' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+  
+  // POST /api/rate
+  if (path === '/api/rate' && request.method === 'POST') {
+    try {
+      const data: RatingRequest = await request.json();
+      const { cartridge_id, rating, vessel_id } = data;
+      
+      if (rating < 1 || rating > 5) {
+        return new Response(JSON.stringify({ error: 'Rating must be between 1 and 5' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      let cartridge: Cartridge | undefined = DEFAULT_CARTRIDGES.find(c => c.id === cartridge_id);
+      let isCustom = false;
+      
+      if (!cartridge) {
+        cartridge = await env.CARTRIDGES.get(cartridge_id, 'json') as Cartridge;
+        isCustom = true;
+      }
+      
+      if (!cartridge) {
+        return new Response(JSON.stringify({ error: 'Cartridge not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // Simple rating update (in production, you'd want weighted average)
+      cartridge.rating = (cartridge.rating + rating) / 2;
+      
+      if (isCustom) {
+        await env.CARTRIDGES.put(cartridge_id, JSON.stringify(cartridge));
+      }
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Rating submitted for ${cartridge_id}`,
+        new_rating: cartridge.rating
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: 'Invalid request' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+  
+  // POST /api/publish
+  if (path === '/api/publish' && request.method === 'POST') {
+    try {
+      const data: PublishRequest = await request.json();
+      const cartridgeData: CartridgeData = data.cartridge;
+      
+      // Validate required fields
+      if (!cartridgeData.id || !cartridgeData.name || !cartridgeData.version) {
+        return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // Check if cartridge already exists
+      const existing = await env.CARTRIDGES.get(cartridgeData.id, 'json');
+      if (existing) {
+        return new Response(JSON.stringify({ error: 'Cartridge ID already exists' }), {
+          status: 409,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // Create full cartridge object
+      const cartridge: Cartridge = {
+        ...cartridgeData,
+        rating: 0,
+        downloads: 0,
+        skills: cartridgeData.skills || [],
+        rules: cartridgeData.rules || [],
+        compatible_with: cartridgeData.compatible_with || ['all']
+      };
+      
+      // Store in KV
+      await env.CARTRIDGES.put(cartridgeData.id, JSON.stringify(cartridge));
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Cartridge ${cartridgeData.id} published successfully`,
+        cartridge
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: 'Invalid request' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+  
+  // GET /health
+  if (path === '/health' && request.method === 'GET') {
+    return new Response(JSON.stringify({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      service: 'skill-cartridge-registry',
+      version: '1.0.0'
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  
+  return new Response(JSON.stringify({ error: 'Not found' }), {
+    status: 404,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
 export default {
-  async fetch(request: Request, env: any): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     
-    // Security headers
-    const securityHeaders = {
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-ancestors 'none'",
-      'X-Frame-Options': 'DENY',
-      'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'strict-origin-when-cross-origin'
-    };
-
-    // Health endpoint
-    if (path === '/health') {
-      return new Response(JSON.stringify({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        service: 'skill-cartridge-registry',
-        version: '1.0.0'
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          ...securityHeaders
-        }
-      });
-    }
-
-    // Fleet metadata
-    if (path === '/vessel.json') {
-      return new Response(JSON.stringify({
-        name: "skill-cartridge-registry",
-        version: "1.0.0",
-        description: "JSON skill cartridge marketplace for AI vessels",
-        capabilities: ["cartridge_discovery", "rating_system", "installation_api"],
-        endpoints: [
-          "/api/cartridges",
-          "/api/install",
-          "/api/rate"
-        ],
-        built_with: "Cocapn AI Runtime",
-        repository: "https://github.com/Lucineer/cocapn-ai"
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          ...securityHeaders
-        }
-      });
-    }
-
-    // API: Get cartridges
-    if (path === '/api/cartridges') {
-      const searchParams = url.searchParams;
-      const category = searchParams.get('category');
-      const minRating = searchParams.get('min_rating');
-      const searchQuery = searchParams.get('q');
-      
-      let filtered = [...defaultCartridges];
-      
-      // Filter by category
-      if (category) {
-        filtered = filtered.filter(c => c.category === category);
-      }
-      
-      // Filter by minimum rating
-      if (minRating) {
-        const rating = parseFloat(minRating);
-        if (!isNaN(rating)) {
-          filtered = filtered.filter(c => c.rating >= rating);
-        }
-      }
-      
-      // Search by name or description
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(c => 
-          c.name.toLowerCase().includes(query) || 
-          c.description.toLowerCase().includes(query) ||
-          c.skills.some(skill => skill.toLowerCase().includes(query))
-        );
-      }
-      
-      // Sort by downloads (default)
-      filtered.sort((a, b) => b.downloads - a.downloads);
-      
-      return new Response(JSON.stringify({
-        cartridges: filtered,
-        count: filtered.length,
-        total: defaultCartridges.length
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          ...securityHeaders
-        }
-      });
-    }
-
-    // API: Install cartridge
-    if (path === '/api/install' && request.method === 'POST') {
-      try {
-        const body = await request.json();
-        const { cartridge, vessel_id } = body;
-        
-        if (!cartridge || !vessel_id) {
-          return new Response(JSON.stringify({
-            error: 'Missing required fields: cartridge and vessel_id'
-          }), {
-            status: 400,
-            headers: {
-              'Content-Type': 'application/json',
-              ...securityHeaders
-            }
-          });
-        }
-        
-        // Find the cartridge
-        const foundCartridge = defaultCartridges.find(c => c.name === cartridge);
-        if (!foundCartridge) {
-          return new Response(JSON.stringify({
-            error: `Cartridge '${cartridge}' not found`
-          }), {
-            status: 404,
-            headers: {
-              'Content-Type': 'application/json',
-              ...securityHeaders
-            }
-          });
-        }
-        
-        // In a real implementation, you would:
-        // 1. Validate the vessel_id
-        // 2. Store installation record in KV
-        // 3. Trigger deployment to the vessel
-        // 4. Increment download count
-        
-        return new Response(JSON.stringify({
-          success: true,
-          message: `Cartridge '${cartridge}' installed on vessel '${vessel_id}'`,
-          cartridge: foundCartridge,
-          installation_id: `inst_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date().toISOString()
-        }),
+    // Set security headers
+    const headers
